@@ -1,16 +1,5 @@
 package main
 
-/*
-http://pcso-lotto-results-and-statistics.webnatin.com/6-55results.asp
-http://pcso-lotto-results-and-statistics.webnatin.com/6-49results.asp
-http://pcso-lotto-results-and-statistics.webnatin.com/6-45results.asp
-http://pcso-lotto-results-and-statistics.webnatin.com/6-42results.asp
-http://pcso-lotto-results-and-statistics.webnatin.com/6-dresults.asp
-http://pcso-lotto-results-and-statistics.webnatin.com/4-dresults.asp
-http://pcso-lotto-results-and-statistics.webnatin.com/3-dresults.asp
-http://pcso-lotto-results-and-statistics.webnatin.com/2-dresults.asp
-*/
-
 import (
 	"encoding/json"
 	"fmt"
@@ -20,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"sync"
 )
 
 type LottoResults struct {
@@ -46,23 +36,24 @@ const CLR_X = "\x1b[38;1m"
 const CLR_N = "\x1b[0m"
 
 func main() {
+	wg := &sync.WaitGroup{}
 	if _, err := os.Stat("results"); os.IsNotExist(err) {
 		os.Mkdir("."+string(filepath.Separator)+"results", 0777)
 	}
 	runtime.GOMAXPROCS(4)
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/6-55results.asp", CLR_0, "results/6-55.json")
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/6-49results.asp", CLR_R, "results/6-49.json")
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/6-45results.asp", CLR_G, "results/6-45.json")
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/6-42results.asp", CLR_Y, "results/6-42.json")
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/6-dresults.asp", CLR_B, "results/6-d.json")
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/4-dresults.asp", CLR_M, "results/4-d.json")
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/3-dresults.asp", CLR_C, "results/3-d.json")
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/2-dresults.asp", CLR_W, "results/2-d.json")
-	var input string
-	fmt.Scanln(&input)
+	wg.Add(8);
+	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/6-55results.asp", CLR_0, "results/6-55.json", wg )
+	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/6-49results.asp", CLR_R, "results/6-49.json", wg )
+	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/6-45results.asp", CLR_G, "results/6-45.json", wg )
+	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/6-42results.asp", CLR_Y, "results/6-42.json", wg )
+	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/6-dresults.asp", CLR_B, "results/6-d.json", wg )
+	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/4-dresults.asp", CLR_M, "results/4-d.json", wg )
+	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/3-dresults.asp", CLR_C, "results/3-d.json", wg )
+	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/2-dresults.asp", CLR_W, "results/2-d.json", wg )
+	wg.Wait()
 }
 
-func StartScrape(url string, color string, filename string) {
+func StartScrape(url string, color string, filename string,wg *sync.WaitGroup ) {
 	fmt.Println(color + "Creating " + filename + CLR_N)
 	var item = LottoItem{Game: "", Combination: "", Date: "", Jackpot: "", Winners: ""}
 	var results = LottoResults{}
@@ -97,4 +88,5 @@ func StartScrape(url string, color string, filename string) {
 	jsonResults, _ := json.Marshal(results)
 	ioutil.WriteFile(filename, []byte(jsonResults), 0644)
 	fmt.Println(color + "\nCreated json file :" + filename + " -> " + strconv.Itoa(insertedCounter) + " records " + CLR_N)
+	wg.Done()
 }
