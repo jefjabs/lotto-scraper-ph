@@ -41,23 +41,23 @@ func main() {
 		os.Mkdir("."+string(filepath.Separator)+"results", 0777)
 	}
 	runtime.GOMAXPROCS(4)
-	wg.Add(8);
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/6-55results.asp", CLR_0, "results/6-55.json", wg )
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/6-49results.asp", CLR_R, "results/6-49.json", wg )
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/6-45results.asp", CLR_G, "results/6-45.json", wg )
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/6-42results.asp", CLR_Y, "results/6-42.json", wg )
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/6-dresults.asp", CLR_B, "results/6-d.json", wg )
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/4-dresults.asp", CLR_M, "results/4-d.json", wg )
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/3-dresults.asp", CLR_C, "results/3-d.json", wg )
-	go StartScrape("http://pcso-lotto-results-and-statistics.webnatin.com/2-dresults.asp", CLR_W, "results/2-d.json", wg )
+	wg.Add(8)
+	go StartScrape("6-55results.asp", CLR_0, "results/6-55.json", wg)
+	go StartScrape("6-49results.asp", CLR_R, "results/6-49.json", wg)
+	go StartScrape("6-45results.asp", CLR_G, "results/6-45.json", wg)
+	go StartScrape("6-42results.asp", CLR_Y, "results/6-42.json", wg)
+	go StartScrape("6-dresults.asp", CLR_B, "results/6-d.json", wg)
+	go StartScrape("4-dresults.asp", CLR_M, "results/4-d.json", wg)
+	go StartScrape("3-dresults.asp", CLR_C, "results/3-d.json", wg)
+	go StartScrape("2-dresults.asp", CLR_W, "results/2-d.json", wg)
 	wg.Wait()
 }
 
-func StartScrape(url string, color string, filename string,wg *sync.WaitGroup ) {
+func StartScrape(path string, color string, filename string, wg *sync.WaitGroup) {
 	fmt.Println(color + "Creating " + filename + CLR_N)
 	var item = LottoItem{Game: "", Combination: "", Date: "", Jackpot: "", Winners: ""}
 	var results = LottoResults{}
-	doc, queryError := goquery.NewDocument(url)
+	doc, queryError := goquery.NewDocument("http://pcso-lotto-results-and-statistics.webnatin.com/" + path)
 	if queryError != nil {
 		fmt.Println("\nError fetching data..\n" + queryError.Error())
 		return
